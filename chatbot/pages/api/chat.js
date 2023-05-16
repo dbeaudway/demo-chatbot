@@ -1,31 +1,49 @@
-import { OpenAI } from 'langchain/llms/openai';
 import { PineconeClient } from '@pinecone-database/pinecone';
 import { VectorDBQAChain } from 'langchain/chains';
 import { OpenAIEmbeddings } from 'langchain/embeddings/openai';
 import { PineconeStore } from 'langchain/vectorstores/pinecone';
-import { BufferWindowMemory } from 'langchain/memory';
 import { ConversationChain } from 'langchain/chains';
+import { ChatOpenAI } from 'langchain/chat_models/openai';
+import {
+  ChatPromptTemplate,
+  HumanMessagePromptTemplate,
+  SystemMessagePromptTemplate,
+  MessagesPlaceholder,
+} from 'langchain/prompts';
+import { BufferMemory } from 'langchain/memory';
 
-const model = new OpenAI({
-  openAIApiKey: process.env.OPENAI_API_KEY,
-  temperature: 0,
+const memory = new BufferMemory({
+  returnMessages: true,
+  memoryKey: 'history',
 });
 
-// Set the memory to keep the last 3 interactions
-
-// Initiate Pinecone client
-const client = new PineconeClient();
-
 export default async function handler(req, res) {
+  const client = new PineconeClient();
+
+  const model = new ChatOpenAI({ temperature: 0 });
+
+  const chatPrompt = ChatPromptTemplate.fromPromptMessages([
+    SystemMessagePromptTemplate.fromTemplate(`
+      The following is a friendly conversation between a human and an AI. 
+      The AI is talkative and provides lots of specific details from its context. 
+      If the AI does not know the answer to a question, it truthfully says it does not know.
+      Use the "history" to understand what we've already talked about in the conversation.
+  
+      Use the CONTEXT below to answer the QUESTION asked by the user.
+      `),
+    new MessagesPlaceholder('history'),
+    HumanMessagePromptTemplate.fromTemplate('{input}'),
+  ]);
+
+  const llmChain = new ConversationChain({
+    memory,
+    prompt: chatPrompt,
+    llm: model,
+    verbose: true,
+  });
+
   if (req.method == 'POST') {
-    const memory = new BufferWindowMemory({ k: 3 });
-
-    const llmChain = new ConversationChain({
-      llm: model,
-      memory: memory,
-      verbose: true,
-    });
-
+    // Initiate Pinecone client
     await client.init({
       apiKey: process.env.PINECONE_API_KEY,
       environment: process.env.PINECONE_ENVIRONMENT,
@@ -54,13 +72,6 @@ export default async function handler(req, res) {
       // Create a prompt to inform the LLM how to respond
       // Insert the database results and question to guide the answer
       const prompt = `
-            ROLE: You are a helpful AI bot answering questions for a human.
-            You will use CONTEXT to answer the questions.
-            You will use MEMORY chat messages to make responses more conversational.
-            You will answer the QUESTION for the user.
-            You will NOT use any information outside of the CONTEXT to answer the question.
-            If you don't know the answer, you will say "I can't help you with that answer".
-
             CONTEXT: ${JSON.stringify(pineconeResponse)}
             
             QUESTION: ${query}
