@@ -1,0 +1,69 @@
+.container {
+  padding: 0 1rem;
+}
+
+.main {
+  min-height: 100vh;
+  padding: 1rem 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.chatBox {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+  width: 500px;
+  overflow-y: scroll;
+  border: 1px solid grey;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.chatBox ul {
+  padding: 0;
+  list-style: none;
+}
+
+.form {
+  display: flex;
+  border: 1px solid grey;
+  padding: 0.5rem;
+  border-radius: 1rem;
+  margin: 0.5rem;
+  width: 500px;
+}
+
+.form input {
+  width: 100%;
+  border-radius: 1rem;
+  margin-right: 1rem;
+  border: 1px solid lightgrey;
+}
+
+.form button {
+  background-color: rgb(6, 73, 206);
+  color: #ffffff;
+  border: none;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.query {
+  background-color: rgb(6, 73, 206);
+  color: white;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin: 1rem 0 1rem 0;
+}
+
+.response {
+  background-color: #efefee;
+  color: #000000;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin: 1rem 0 1rem 0;
+}
